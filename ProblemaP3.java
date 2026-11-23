@@ -1,4 +1,4 @@
-// Autor(es): [Nombre Integrante 1], [Nombre Integrante 2], [Nombre Integrante 3]
+// Autor(es): Yeiner Ibarguen, Jose Luis Parra
 // ISIS 2112 - Diseño de Algoritmos | Proyecto Parte 3
 
 import java.io.BufferedReader;
@@ -11,6 +11,7 @@ import java.util.StringTokenizer;
 
 public class ProblemaP3 {
 
+    // Primera solución
     private static List<Integer> resolverCaso(int n, List<List<Integer>> grafo) {
         List<Integer> respuesta = new ArrayList<>();
         boolean [] visitados = new boolean[n];
