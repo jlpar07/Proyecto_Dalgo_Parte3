@@ -11,45 +11,70 @@ import java.util.StringTokenizer;
 
 public class ProblemaP3 {
 
-    // Primera solución
+    // Selecciona repetidamente el estudiante que cubre más estudiantes aún pendientes.
     private static List<Integer> resolverCaso(int n, List<List<Integer>> grafo) {
         List<Integer> respuesta = new ArrayList<>();
-        boolean [] visitados = new boolean[n];
-        int [] ganancias = new int[n];
+        boolean[] cubiertos = new boolean[n];
+        int[] ganancias = new int[n];
         int faltantes = n;
-        PriorityQueue<Integer> cola = new PriorityQueue<>((a, b) -> Integer.compare(ganancias[b], ganancias[a])); // Cola de prioridad basada en las ganancias
+        // Cola de prioridad para seleccionar el nodo con mayor ganancia actual.
+        PriorityQueue<Entrada> cola = new PriorityQueue<>((a, b) -> Integer.compare(b.ganancia, a.ganancia));
 
         for (int i = 0; i < n; i++) {
-            ganancias[i] = grafo.get(i).size() + 1; // Inicializamos las ganancias con el número de vecinos del nodo + el mismo
-            cola.add(i); // Agregamos todos los nodos a la cola de prioridad, se prioriza el nodo con mayor ganancia
+            // Inicialmente, un estudiante cubre su propio nodo y sus vecinos.
+            ganancias[i] = grafo.get(i).size() + 1;
+            cola.add(new Entrada(i, ganancias[i]));
         }
 
-    
-        while (faltantes > 0 && !cola.isEmpty()){
-            
-            int nodo = cola.poll(); // Obtenemos el nodo con la mayor ganancia
-            if (ganancias[nodo] == 0) continue; // Si la ganancia es 0 o negativa, lo ignoramos
+        while (faltantes > 0) {
+            //Se selecciona el nodo con mayor ganancia actual.
+            Entrada entrada = cola.poll();
+            int nodo = entrada.nodo;
 
-            // Marcamos el nodo como visitado y lo agregamos a la respuesta
-            visitados[nodo] = true;
+            // Se ignoran nodos ya cubiertos y prioridades que ya no representan la ganancia actual del nodo.
+            if (cubiertos[nodo] || entrada.ganancia != ganancias[nodo]) {
+                continue;
+            }
+
             respuesta.add(nodo);
-            // Disminuimos el contador de nodos faltantes
+            // ArrayList para almacenar los nodos que se acaban de cubrir en esta iteración.
+            List<Integer> nuevosCubiertos = new ArrayList<>();
+            cubiertos[nodo] = true;
+            nuevosCubiertos.add(nodo);
             faltantes--;
 
-            // Actualizamos las ganancias de los vecinos del nodo seleccionado
             for (int vecino : grafo.get(nodo)) {
-                if (!visitados[vecino]) {
-                    visitados[vecino] = true; // Marcamos el vecino como visitado
-                    faltantes--; // Disminuimos el contador de nodos faltantes
-                    ganancias[vecino]--; // Reducimos la ganancia del vecino
-                    cola.add(vecino); // Reinsertamos el vecino en la cola para actualizar su posición según la nueva ganancia
+                if (!cubiertos[vecino]) {
+                    cubiertos[vecino] = true;
+                    nuevosCubiertos.add(vecino);
+                    faltantes--;
+                }
             }
+
+            // Cada nuevo nodo cubierto deja de aportar ganancia a sus candidatos.
+            // Se insertan nuevas entradas para que la cola refleje esas ganancias.
+            for (int cubierto : nuevosCubiertos) {
+                for (int candidato : grafo.get(cubierto)) {
+                    if (!cubiertos[candidato]) {
+                        ganancias[candidato]--;
+                        cola.add(new Entrada(candidato, ganancias[candidato]));
+                    }
+                }
             }
         }
 
-
-
         return respuesta;
+    }
+
+    private static class Entrada {
+        // Representa una fotografía de la ganancia de un nodo en un momento dado.
+        private final int nodo;
+        private final int ganancia;
+
+        private Entrada(int nodo, int ganancia) {
+            this.nodo = nodo;
+            this.ganancia = ganancia;
+        }
     }
 
     // Método principal para manejar la entrada y salida
@@ -80,12 +105,12 @@ public class ProblemaP3 {
 
             List<Integer> seleccionados = resolverCaso(n, adj);
 
-            // Formatear salida: códigos separados por exactamente un espacio
+            // Formatear salida: códigos separados por exactamente un espacio y terminar con '*'
             for (int i = 0; i < seleccionados.size(); i++) {
                 if (i > 0) out.append(' ');
                 out.append(seleccionados.get(i));
             }
-            out.append('\n');
+            out.append('*').append('\n');
         }
 
         System.out.print(out.toString());
