@@ -5,6 +5,7 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.PriorityQueue;
 import java.util.StringTokenizer;
@@ -18,7 +19,7 @@ public class ProblemaP3 {
         int[] ganancias = new int[n];
         int faltantes = n;
         // Cola de prioridad para seleccionar el nodo con mayor ganancia actual.
-        PriorityQueue<Entrada> cola = new PriorityQueue<>((a, b) -> Integer.compare(b.ganancia, a.ganancia));
+        PriorityQueue<Entrada> cola = new PriorityQueue<>();
 
         for (int i = 0; i < n; i++) {
             // Inicialmente, un estudiante cubre su propio nodo y sus vecinos.
@@ -31,31 +32,33 @@ public class ProblemaP3 {
             Entrada entrada = cola.poll();
             int nodo = entrada.nodo;
 
-            // Se ignoran nodos ya cubiertos y prioridades que ya no representan la ganancia actual del nodo.
-            if (cubiertos[nodo] || entrada.ganancia != ganancias[nodo]) {
-                continue;
-            }
-
-            respuesta.add(nodo);
-            // ArrayList para almacenar los nodos que se acaban de cubrir en esta iteración.
-            List<Integer> nuevosCubiertos = new ArrayList<>();
-            cubiertos[nodo] = true;
-            nuevosCubiertos.add(nodo);
-            faltantes--;
-
-            for (int vecino : grafo.get(nodo)) {
-                if (!cubiertos[vecino]) {
-                    cubiertos[vecino] = true;
-                    nuevosCubiertos.add(vecino);
+            // Solo se usa la entrada si su ganancia sigue siendo la actual del nodo.
+            // Si no, es una entrada vieja y se descarta.
+            if (entrada.ganancia == ganancias[nodo]) {
+                respuesta.add(nodo);
+                // ArrayList para almacenar los nodos que se acaban de cubrir en esta iteración.
+                List<Integer> nuevosCubiertos = new ArrayList<>();
+                // El nodo elegido puede estar ya cubierto; solo cuenta como nuevo si no lo estaba.
+                if (!cubiertos[nodo]) {
+                    cubiertos[nodo] = true;
+                    nuevosCubiertos.add(nodo);
                     faltantes--;
                 }
-            }
 
-            // Cada nuevo nodo cubierto deja de aportar ganancia a sus candidatos.
-            // Se insertan nuevas entradas para que la cola refleje esas ganancias.
-            for (int cubierto : nuevosCubiertos) {
-                for (int candidato : grafo.get(cubierto)) {
-                    if (!cubiertos[candidato]) {
+                for (int vecino : grafo.get(nodo)) {
+                    if (!cubiertos[vecino]) {
+                        cubiertos[vecino] = true;
+                        nuevosCubiertos.add(vecino);
+                        faltantes--;
+                    }
+                }
+
+                // Cada nuevo nodo cubierto deja de aportar ganancia a sí mismo y a sus vecinos.
+                // Se insertan nuevas entradas para que la cola refleje esas ganancias.
+                for (int cubierto : nuevosCubiertos) {
+                    ganancias[cubierto]--;
+                    cola.add(new Entrada(cubierto, ganancias[cubierto]));
+                    for (int candidato : grafo.get(cubierto)) {
                         ganancias[candidato]--;
                         cola.add(new Entrada(candidato, ganancias[candidato]));
                     }
@@ -63,10 +66,11 @@ public class ProblemaP3 {
             }
         }
 
+        Collections.sort(respuesta);
         return respuesta;
     }
 
-    private static class Entrada {
+    private static class Entrada implements Comparable<Entrada> {
         // Representa una fotografía de la ganancia de un nodo en un momento dado.
         private final int nodo;
         private final int ganancia;
@@ -74,6 +78,14 @@ public class ProblemaP3 {
         private Entrada(int nodo, int ganancia) {
             this.nodo = nodo;
             this.ganancia = ganancia;
+        }
+
+        // Sale primero la entrada con mayor ganancia; si empatan, la de menor código.
+        public int compareTo(Entrada otra) {
+            if (this.ganancia != otra.ganancia) {
+                return Integer.compare(otra.ganancia, this.ganancia);
+            }
+            return Integer.compare(this.nodo, otra.nodo);
         }
     }
 
@@ -110,7 +122,7 @@ public class ProblemaP3 {
                 if (i > 0) out.append(' ');
                 out.append(seleccionados.get(i));
             }
-            out.append('*').append('\n');
+            out.append('\n');
         }
 
         System.out.print(out.toString());
