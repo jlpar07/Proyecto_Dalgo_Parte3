@@ -1,4 +1,4 @@
-// Autor(es): Yeiner Ibarguen, Jose Luis Parra
+// Hecho por: Yeiner Ibarguen, Jose Luis Parra
 // ISIS 2112 - Diseño de Algoritmos | Proyecto Parte 3
 
 import java.io.BufferedReader;
